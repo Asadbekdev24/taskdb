@@ -17,10 +17,11 @@ class LocalDb {
   }
 
   // vars
-  static const _tableName = "Tasks2";
+  static const _tableName = "Tasks3";
   static const _nameColumn = "name";
   static const _descriptionColumn = "description";
   static const _statusColumn = "status";
+  static const _hideItem="isHideItem";
 
   Database? _db;
 
@@ -48,17 +49,18 @@ class LocalDb {
 
   Future<Database> initDatabase() async {
     final databasePathOS = await getDatabasesPath();
-    final dbPath = join(databasePathOS, "tasks.db");
+    final dbPath = join(databasePathOS, "tasks2.db");
     final db = await openDatabase(
-      version: 1,
+      version: 4,
       dbPath,
       onCreate: (db, version) {
         db.execute('''
       CREATE TABLE $_tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        $_nameColumn TEXT NOT NULL, 
+        $_nameColumn TEXT NOT NULL,
         $_statusColumn INTEGER NOT NULL,
-        $_descriptionColumn TEXT NOT NULL
+        $_descriptionColumn TEXT NOT NULL,
+        $_hideItem INTEGER NOT NULL
       )
     ''');
       },
@@ -82,6 +84,7 @@ class LocalDb {
       _nameColumn: name,
       _descriptionColumn: description,
       _statusColumn: 0,
+      _hideItem:0,
     });
   }
 
@@ -117,11 +120,27 @@ class LocalDb {
     );
   }
 
+  Future<void> updateHide({
+    required int id,
+    required int newValue,
+  }) async {
+    final db = await database;
+    db.update(
+      _tableName,
+      {
+        _hideItem: newValue,
+      },
+      where: "id=?",
+      whereArgs: [id],
+    );
+  }
+
   // update task
   Future<void> updateTask({
     required String name,
     required String description,
     required int id,
+
   }) async {
     final db = await database;
 

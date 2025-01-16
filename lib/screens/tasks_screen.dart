@@ -6,6 +6,9 @@ class TasksScreen extends StatefulWidget {
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
+
+  bool hide=false;
+  String test="";
 }
 
 class _TasksScreenState extends State<TasksScreen> {
@@ -48,6 +51,9 @@ class _TasksScreenState extends State<TasksScreen> {
                   onDismissed: (direction) async {
                     if (direction == DismissDirection.endToStart) {
                       await localDb.deleteTask(task['id']);
+                      setState(() {
+                        
+                      });
                     } else if (direction == DismissDirection.startToEnd) {
                       _showModalSheet(
                         context: context,
@@ -89,36 +95,79 @@ class _TasksScreenState extends State<TasksScreen> {
                   ),
                   direction: DismissDirection.horizontal,
                   key: Key((snapshot.data![index]["id"]).toString()),
-                  child: ListTile(
-                    onLongPress: () async {
-                      await localDb.deleteTask(task["id"]);
-                      setState(() {});
-                    },
-                    title: Text(
-                      task["name"],
-                      style: TextStyle(
-                        decoration: task["status"] == 1
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16, right: 4, left: 4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                    ),
-                    subtitle: Text(
-                      style: TextStyle(
-                        decoration: task["status"] == 1
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+                      child: ListTile(
+                        // onLongPress: () async {
+                        //   await localDb.deleteTask(task["id"]);
+                        //   setState(() {});
+                        // },
+                        title: Row(
+                          children: [
+                            Text(
+                              task["isHideItem"]==0 ?  task["name"]: "",
+                              style: TextStyle(
+                                decoration: task["status"] == 1
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                              ),
+                            ),
+                            Spacer(),
+                            IconButton(
+                                onPressed: () async{
+                                  task["isHideItem"]==0;
+
+                                  await localDb.updateHide(
+                                    id: task["id"],
+                                    newValue: task["isHideItem"]==0? 1 : 0,
+                                    );
+                                  setState(() {
+
+                                  });
+                                },
+                                icon: Icon(task["isHideItem"]==0 ? Icons.visibility_off : Icons.visibility)),
+                            IconButton(
+                                onPressed: () {
+
+                                  _showModalSheet(context: context, isEditing: true, task: task);
+                                  setState(() {
+
+                                  });
+
+                                }, icon: Icon(Icons.edit)),
+                            IconButton(
+                                onPressed: () async{
+                                  await localDb.deleteTask(task["id"]);
+                                  setState(() {
+
+                                  });
+                                }, icon: Icon(Icons.delete)),
+                          ],
+                        ),
+                        // subtitle: Text(
+                        //   style: TextStyle(
+                        //     decoration: task["status"] == 1
+                        //         ? TextDecoration.lineThrough
+                        //         : TextDecoration.none,
+                        //   ),
+                        //   task["description"],
+                        // ),
+                        leading: Checkbox(
+                          value: task["status"] == 1,
+                          onChanged: (value) async {
+                            await localDb.updateStatus(
+                              id: task["id"],
+                              newValue: value == true ? 1 : 0,
+                            );
+                            setState(() {});
+                          },
+                        ),
                       ),
-                      task["description"],
-                    ),
-                    trailing: Checkbox(
-                      value: task["status"] == 1,
-                      onChanged: (value) async {
-                        await localDb.updateStatus(
-                          id: task["id"],
-                          newValue: value == true ? 1 : 0,
-                        );
-                        setState(() {});
-                      },
                     ),
                   ),
                 );
@@ -132,7 +181,10 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showModalSheet(context: context);
+          _showModalSheet(context: context, isEditing: false);
+          setState(() {
+
+          });
         },
         child: Icon(
           Icons.add,
@@ -143,7 +195,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Future<dynamic> _showModalSheet({
     required BuildContext context,
-    bool isEditing = false,
+    required bool isEditing,
     Map<String, dynamic>? task,
   }) {
     if (isEditing) {
